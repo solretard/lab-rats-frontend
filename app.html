@@ -140,12 +140,13 @@
   </div>
 
   <div class="search-panel">
+    <p style="font-size: 11px; color: var(--text-dim); margin: 0 0 8px; letter-spacing: 0.5px;">step 1 — which token are we checking?</p>
     <div class="search-row">
-      <input type="text" id="issuerInput" placeholder="token issuer address (required)">
+      <input type="text" id="issuerInput" placeholder="the TOKEN's issuer address (not your wallet)">
       <button onclick="runDiagnostics()">run test</button>
     </div>
     <div class="wallet-row">
-      <label>your wallet (optional — enables personal comparisons on twitch's tools)</label>
+      <label>step 2 (optional) — your own wallet, to personalize twitch's results</label>
       <input type="text" id="walletInput" placeholder="rYourWalletAddress">
     </div>
   </div>
@@ -258,7 +259,7 @@
     const issuer = document.getElementById('issuerInput').value.trim();
     const wallet = document.getElementById('walletInput').value.trim();
     if (!issuer || !issuer.startsWith('r')) {
-      alert('paste a valid token issuer address first (starts with r)');
+      alert("this top field needs the TOKEN's issuer address, not your personal wallet. put your wallet in the field below instead.");
       return;
     }
 
