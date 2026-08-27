@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>lab rats</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a1410;
+    --panel: #0f1e17;
+    --border: #2a4a3a;
+    --green: #7fff5c;
+    --green-dim: #3d9e2f;
+    --text: #d8f0d8;
+    --text-dim: #7a9a85;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: radial-gradient(ellipse at top, #10241a 0%, #060d09 70%);
+    color: var(--text);
+    font-family: 'Courier Prime', monospace;
+  }
+  .wrap { max-width: 700px; margin: 0 auto; padding: 0 20px; }
+
+  .hero {
+    width: 100%; height: 100vh; min-height: 480px; position: relative;
+    display: flex; align-items: flex-end; justify-content: center;
+    overflow: hidden;
+  }
+  .hero video {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; object-position: center 25%;
+  }
+  .hero::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(to bottom, rgba(6,13,9,0) 40%, rgba(6,13,9,0.95) 95%);
+  }
+  .hero .scroll-hint {
+    position: relative; z-index: 1; margin-bottom: 24px;
+    font-size: 12px; letter-spacing: 2px; color: var(--green);
+    text-transform: uppercase; animation: bob 2s ease-in-out infinite;
+  }
+  @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
+
+  .section-label {
+    display: flex; align-items: center; gap: 10px; justify-content: center;
+    font-size: 12px; letter-spacing: 3px; color: var(--green-dim);
+    text-transform: uppercase; margin: 0 0 20px;
+  }
+  .section-label .line { flex: 1; max-width: 60px; height: 1px; background: var(--border); }
+  .section-label .diamond { color: var(--green); font-size: 10px; }
+
+  .stamp-panel {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 28px 24px; margin-bottom: 50px; position: relative;
+  }
+  .stamp-panel::before, .stamp-panel::after {
+    content: ""; position: absolute; width: 14px; height: 14px;
+    border-color: var(--green); border-style: solid; opacity: 0.7;
+  }
+  .stamp-panel::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; border-radius: 6px 0 0 0; }
+  .stamp-panel::after { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; border-radius: 0 0 6px 0; }
+
+  .stamp {
+    display: inline-block; border: 2px solid #d94848; color: #d94848;
+    font-family: 'Special Elite', monospace; font-size: 12px; letter-spacing: 2px;
+    padding: 4px 12px; border-radius: 3px; transform: rotate(-4deg);
+    margin-bottom: 16px; opacity: 0.85;
+  }
+  .stamp-panel h2 {
+    font-family: 'Special Elite', monospace; font-size: 20px; color: var(--green);
+    margin: 0 0 14px; letter-spacing: 1px;
+  }
+  .stamp-panel p {
+    font-size: 14px; line-height: 1.7; color: var(--text); margin: 0 0 12px;
+  }
+  .stamp-panel p:last-child { margin-bottom: 0; }
+
+  .cta-section { text-align: center; margin-bottom: 60px; }
+  .cta-section h3 {
+    font-family: 'Special Elite', monospace; font-size: 22px; color: var(--text);
+    margin: 0 0 8px; letter-spacing: 1px;
+  }
+  .cta-section p { font-size: 13px; color: var(--text-dim); margin: 0 0 22px; }
+  .cta-button {
+    display: inline-block; background: var(--green); color: #06180c;
+    border: none; border-radius: 6px; padding: 16px 36px;
+    font-family: 'Special Elite', monospace; font-size: 15px; letter-spacing: 2px;
+    text-transform: uppercase; text-decoration: none; cursor: pointer;
+    box-shadow: 0 0 24px rgba(127,255,92,0.35);
+  }
+  .live-counter {
+    margin-top: 18px; font-size: 12px; color: var(--green-dim); letter-spacing: 1px;
+  }
+  .live-counter .dot {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green); margin-right: 6px;
+    box-shadow: 0 0 6px var(--green); animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  .rat-card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    padding: 24px; margin-bottom: 20px; position: relative;
+    display: flex; gap: 18px; align-items: flex-start;
+  }
+  .rat-card::before, .rat-card::after {
+    content: ""; position: absolute; width: 12px; height: 12px;
+    border-color: var(--green-dim); border-style: solid;
+  }
+  .rat-card::before { top: -1px; left: -1px; border-width: 1.5px 0 0 1.5px; border-radius: 8px 0 0 0; }
+  .rat-card::after { bottom: -1px; right: -1px; border-width: 0 1.5px 1.5px 0; border-radius: 0 0 8px 0; }
+
+  .rat-portrait {
+    width: 84px; height: 84px; border-radius: 50%; overflow: hidden;
+    border: 2px solid var(--green); flex-shrink: 0;
+    box-shadow: 0 0 14px rgba(127,255,92,0.25);
+  }
+  .rat-portrait img { width: 100%; height: 100%; object-fit: cover; object-position: center 20%; }
+
+  .rat-info { flex: 1; }
+  .rat-info .name {
+    font-family: 'Special Elite', monospace; font-size: 18px; color: var(--green);
+    margin: 0 0 2px; letter-spacing: 1px;
+  }
+  .rat-info .role { font-size: 11px; color: var(--text-dim); letter-spacing: 0.5px; margin: 0 0 10px; text-transform: uppercase; }
+  .rat-info .bio { font-size: 13px; color: var(--text); line-height: 1.6; margin: 0 0 12px; font-style: italic; }
+  .rat-info .rat-cta {
+    font-size: 12px; color: var(--green); text-decoration: none; letter-spacing: 0.5px;
+  }
+  .rat-info .rat-cta:hover { text-decoration: underline; }
+
+  .footer-note {
+    text-align: center; font-size: 11px; color: var(--text-dim);
+    letter-spacing: 0.5px; padding: 30px 0 50px; border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 480px) {
+    .rat-card { flex-direction: column; align-items: center; text-align: center; }
+    .rat-info .bio { text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="hero">
+    <video autoplay loop muted playsinline>
+      <source src="assets/hero_loop.mp4" type="video/mp4">
+    </video>
+    <span class="scroll-hint">&#8595; scroll to read the file</span>
+  </div>
+
+  <div class="wrap">
+
+    <div class="section-label" style="margin-top: 50px;">
+      <span class="line"></span>
+      <span class="diamond">&#10022;</span>
+      <span>part one — the file</span>
+      <span class="diamond">&#10022;</span>
+      <span class="line"></span>
+    </div>
+
+    <div class="stamp-panel">
+      <span class="stamp">classified — subject log</span>
+      <h2>something has been running on the ledger.</h2>
+      <p>deep beneath the xrp ledger, a series of experiments have been quietly underway. rats — unassuming, overlooked, easy to ignore — were exposed to raw, unrefined drops. most didn't survive contact. the ones who did came out changed.</p>
+      <p>sharper senses. twitchy instincts. an unnatural ability to smell when something on the ledger isn't what it claims to be. a fake trustline. a hollow contract. a rug about to pull.</p>
+      <p>they escaped the lab with their notes, their formulas, and the masks that kept them breathing. now they live among the validators and the traders — still testing, still refining, still watching. what they've learned could reshape how this community protects itself. the experiment never stopped. it just moved into the ledger itself.</p>
+    </div>
+
+    <div class="section-label">
+      <span class="line"></span>
+      <span class="diamond">&#10022;</span>
+      <span>part two — the offer</span>
+      <span class="diamond">&#10022;</span>
+      <span class="line"></span>
+    </div>
+
+    <div class="cta-section">
+      <h3>the formulas are ready.</h3>
+      <p>run a diagnostic on any wallet or token. nothing to sign, ever.</p>
+      <a href="app.html" class="cta-button">perform experiments</a>
+      <div class="live-counter"><span class="dot"></span>247 experiments run this week</div>
+    </div>
+
+    <div class="section-label">
+      <span class="line"></span>
+      <span class="diamond">&#10022;</span>
+      <span>part three — meet the rats</span>
+      <span class="diamond">&#10022;</span>
+      <span class="line"></span>
+    </div>
+
+    <div class="rat-card">
+      <div class="rat-portrait"><img src="assets/base_char.png" alt="Twitch"></div>
+      <div class="rat-info">
+        <p class="name">twitch</p>
+        <p class="role">timing specialist</p>
+        <p class="bio">"i don't wait for confirmations. i clocked every ledger since block one — i know exactly when you bought, and exactly when you should've."</p>
+        <a href="app.html#twitch" class="rat-cta">run a timing check with twitch &rarr;</a>
+      </div>
+    </div>
+
+    <div class="rat-card">
+      <div class="rat-portrait"><img src="assets/base_char.png" alt="Whiskers"></div>
+      <div class="rat-info">
+        <p class="name">whiskers</p>
+        <p class="role">surveillance</p>
+        <p class="bio">"i can smell a bot from three ledgers away. dev wallets think they're quiet. they're not. not to me."</p>
+        <a href="app.html#whiskers" class="rat-cta">run a watch with whiskers &rarr;</a>
+      </div>
+    </div>
+
+    <div class="rat-card">
+      <div class="rat-portrait"><img src="assets/base_char.png" alt="Doc"></div>
+      <div class="rat-info">
+        <p class="name">doc</p>
+        <p class="role">risk diagnosis</p>
+        <p class="bio">"doc doesn't guess. doc examines. bring me a token and i'll tell you exactly what's wrong with it — if anything is."</p>
+        <a href="app.html#doc" class="rat-cta">get a diagnosis from doc &rarr;</a>
+      </div>
+    </div>
+
+    <div class="rat-card">
+      <div class="rat-portrait"><img src="assets/base_char.png" alt="Squint"></div>
+      <div class="rat-info">
+        <p class="name">squint</p>
+        <p class="role">pattern analysis</p>
+        <p class="bio">"i've seen a thousand charts. i know what a rug looks like before it happens. you just have to know where to squint."</p>
+        <a href="app.html#squint" class="rat-cta">check a pattern with squint &rarr;</a>
+      </div>
+    </div>
+
+    <div class="footer-note">
+      every result pulled live from the ledger. nothing stored, nothing signed.
+    </div>
+
+  </div>
+</body>
+</html>
