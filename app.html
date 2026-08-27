@@ -95,6 +95,25 @@
     font-family: 'Special Elite', monospace; font-size: 14px; margin: 0 0 6px; color: var(--text);
   }
   .tool-card .desc { font-size: 12px; color: var(--text-dim); margin: 0; line-height: 1.5; }
+  .tool-card .result {
+    margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border);
+    font-size: 12px; line-height: 1.6; color: var(--text); display: none;
+  }
+  .tool-card .result.show { display: block; }
+  .tool-card .result .flag-ok { color: var(--green); }
+  .tool-card .result .flag-warn { color: #ffb347; }
+  .tool-card .result .flag-bad { color: #ff6b5c; }
+  .tool-card .result .loading { color: var(--text-dim); font-style: italic; }
+
+  .wallet-row { margin-top: 10px; }
+  .wallet-row input {
+    width: 100%; background: #071009; border: 1px solid var(--border); border-radius: 6px;
+    padding: 10px 12px; color: var(--text); font-family: 'Courier Prime', monospace; font-size: 13px;
+  }
+  .wallet-row input::placeholder { color: #4a6a54; }
+  .wallet-row label {
+    display: block; font-size: 11px; color: var(--text-dim); margin-bottom: 4px; letter-spacing: 0.5px;
+  }
 
   .footer-note {
     text-align: center; font-size: 11px; color: var(--text-dim); margin-top: 36px;
@@ -120,8 +139,12 @@
 
   <div class="search-panel">
     <div class="search-row">
-      <input type="text" placeholder="rWallet... or token issuer address">
-      <button>run test</button>
+      <input type="text" id="issuerInput" placeholder="token issuer address (required)">
+      <button onclick="runDiagnostics()">run test</button>
+    </div>
+    <div class="wallet-row">
+      <label>your wallet (optional — enables personal comparisons on twitch's tools)</label>
+      <input type="text" id="walletInput" placeholder="rYourWalletAddress">
     </div>
   </div>
 
@@ -142,10 +165,12 @@
       <div class="tool-card">
         <p class="name">entry timing</p>
         <p class="desc">compares your buy to the optimal ledger window</p>
+        <div class="result" id="result-twitch-entry"></div>
       </div>
       <div class="tool-card">
         <p class="name">exit timing</p>
         <p class="desc">what you could've sold for, and when you missed it</p>
+        <div class="result" id="result-twitch-exit"></div>
       </div>
     </div>
   </div>
@@ -159,10 +184,12 @@
       <div class="tool-card">
         <p class="name">snipe detector</p>
         <p class="desc">flags bots vs. humans in the earliest buys</p>
+        <div class="result" id="result-whiskers-snipe"></div>
       </div>
       <div class="tool-card">
         <p class="name">dev wallet watch</p>
         <p class="desc">alerts the moment a known dev wallet moves</p>
+        <div class="result show"><span style="color: var(--text-dim);">runs as a live background service — not a one-off check. coming soon here.</span></div>
       </div>
     </div>
   </div>
@@ -176,10 +203,12 @@
       <div class="tool-card">
         <p class="name">liquidity health</p>
         <p class="desc">checks if lp was pulled, how deep the pool runs</p>
+        <div class="result" id="result-doc-liquidity"></div>
       </div>
       <div class="tool-card">
         <p class="name">holder concentration</p>
         <p class="desc">how much supply the top wallets actually hold</p>
+        <div class="result" id="result-doc-holders"></div>
       </div>
     </div>
   </div>
@@ -193,10 +222,12 @@
       <div class="tool-card">
         <p class="name">holder growth</p>
         <p class="desc">tracks if holders are growing or quietly leaving</p>
+        <div class="result" id="result-squint-growth"></div>
       </div>
       <div class="tool-card">
         <p class="name">pattern match</p>
         <p class="desc">compares this launch's shape to past ones</p>
+        <div class="result" id="result-squint-pattern"></div>
       </div>
     </div>
   </div>
@@ -206,5 +237,168 @@
   </div>
 
 </div>
+
+<script>
+  const API_BASE = 'https://lab-rats-backend-production.up.railway.app/api';
+
+  function showLoading(id) {
+    const el = document.getElementById(id);
+    el.innerHTML = '<span class="loading">running...</span>';
+    el.classList.add('show');
+  }
+
+  function showError(id, msg) {
+    const el = document.getElementById(id);
+    el.innerHTML = `<span class="flag-bad">couldn't complete this check — ${msg}</span>`;
+  }
+
+  async function runDiagnostics() {
+    const issuer = document.getElementById('issuerInput').value.trim();
+    const wallet = document.getElementById('walletInput').value.trim();
+    if (!issuer || !issuer.startsWith('r')) {
+      alert('paste a valid token issuer address first (starts with r)');
+      return;
+    }
+
+    const ids = [
+      'result-twitch-entry', 'result-twitch-exit', 'result-whiskers-snipe',
+      'result-doc-liquidity', 'result-doc-holders', 'result-squint-growth', 'result-squint-pattern',
+    ];
+    ids.forEach(showLoading);
+
+    runTwitchEntry(issuer, wallet);
+    runTwitchExit(issuer, wallet);
+    runWhiskersSnipe(issuer);
+    runDocLiquidity(issuer);
+    runDocHolders(issuer);
+    runSquintGrowth(issuer);
+    runSquintPattern(issuer);
+  }
+
+  async function runTwitchEntry(issuer, wallet) {
+    const id = 'result-twitch-entry';
+    try {
+      const url = `${API_BASE}/twitch/entry/${issuer}${wallet ? `?wallet=${wallet}` : ''}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!res.ok) return showError(id, data.error);
+
+      let html = `${data.warning ? `<span class="flag-warn">${data.warning}</span><br>` : ''}`;
+      html += `${data.totalBuys} buys tracked. `;
+      if (data.yourResult) {
+        if (data.yourResult.found) {
+          html += `you bought at ledger +${data.yourResult.lag}, rank #${data.yourResult.rank} of ${data.yourResult.totalBuyers}.`;
+          if (data.yourResult.ledgersBehindFirst > 0) html += ` ${data.yourResult.ledgersBehindFirst} ledger(s) behind the first buyer.`;
+        } else {
+          html += `no buy found for your wallet in this window.`;
+        }
+      } else {
+        const top = data.leaderboard[0];
+        html += `earliest buyer got in at ledger +${top.lag}.`;
+      }
+      document.getElementById(id).innerHTML = html;
+    } catch (e) { showError(id, 'backend unreachable'); }
+  }
+
+  async function runTwitchExit(issuer, wallet) {
+    const id = 'result-twitch-exit';
+    try {
+      const url = `${API_BASE}/twitch/exit/${issuer}${wallet ? `?wallet=${wallet}` : ''}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!res.ok) return showError(id, data.error);
+      if (data.noTrades) return document.getElementById(id).innerHTML = 'no trades yet.';
+
+      let html = `${data.warning ? `<span class="flag-warn">${data.warning}</span><br>` : ''}`;
+      html += `peak price hit at ledger +${data.peak.lag}. current price is `;
+      html += `<span class="${data.pctFromPeak >= 0 ? 'flag-ok' : 'flag-warn'}">${data.pctFromPeak.toFixed(1)}%</span> from peak. `;
+      if (data.yourResult) {
+        if (Array.isArray(data.yourResult)) {
+          const s = data.yourResult[0];
+          html += s.missedPct > 0.01
+            ? `you sold ${s.missedPct.toFixed(1)}% below peak, ${s.ledgersBeforePeak} ledger(s) early.`
+            : `you sold at or near the peak. nice.`;
+        } else if (data.yourResult.stillHolding) {
+          html += `you're still holding.`;
+        }
+      }
+      document.getElementById(id).innerHTML = html;
+    } catch (e) { showError(id, 'backend unreachable'); }
+  }
+
+  async function runWhiskersSnipe(issuer) {
+    const id = 'result-whiskers-snipe';
+    try {
+      const res = await fetch(`${API_BASE}/whiskers/snipe/${issuer}`);
+      const data = await res.json();
+      if (!res.ok) return showError(id, data.error);
+
+      const flagClass = data.botPct >= 70 ? 'flag-bad' : data.botPct >= 40 ? 'flag-warn' : 'flag-ok';
+      let html = `<span class="${flagClass}">${data.botPct}% of early buyers look bot-driven</span> (${data.botCount}/${data.totalChecked}). `;
+      if (data.duplicatedAmounts.length > 0) {
+        html += `coordination detected — repeated identical buy amounts among early wallets.`;
+      }
+      document.getElementById(id).innerHTML = html;
+    } catch (e) { showError(id, 'backend unreachable'); }
+  }
+
+  async function runDocLiquidity(issuer) {
+    const id = 'result-doc-liquidity';
+    try {
+      const res = await fetch(`${API_BASE}/doc/liquidity/${issuer}`);
+      const data = await res.json();
+      if (!res.ok) return showError(id, data.error);
+
+      let html = `${data.warning ? `<span class="flag-warn">${data.warning}</span><br>` : ''}`;
+      html += data.significantWithdrawal
+        ? `<span class="flag-bad">${data.pctOfInitialWithdrawn.toFixed(0)}% of initial liquidity has been withdrawn.</span>`
+        : `<span class="flag-ok">no significant liquidity withdrawals detected.</span>`;
+      if (data.thinLiquidity) html += ` pool is thin relative to volume — expect slippage.`;
+      document.getElementById(id).innerHTML = html;
+    } catch (e) { showError(id, 'backend unreachable'); }
+  }
+
+  async function runDocHolders(issuer) {
+    const id = 'result-doc-holders';
+    try {
+      const res = await fetch(`${API_BASE}/doc/holders/${issuer}`);
+      const data = await res.json();
+      if (!res.ok) return showError(id, data.error);
+
+      const flagClass = data.riskLevel === 'high' ? 'flag-bad' : data.riskLevel === 'medium' ? 'flag-warn' : 'flag-ok';
+      document.getElementById(id).innerHTML =
+        `<span class="${flagClass}">top 5 hold ${data.top5Pct.toFixed(1)}%, top 10 hold ${data.top10Pct.toFixed(1)}%</span> of supply. ${data.totalHolders} total holders.`;
+    } catch (e) { showError(id, 'backend unreachable'); }
+  }
+
+  async function runSquintGrowth(issuer) {
+    const id = 'result-squint-growth';
+    try {
+      const res = await fetch(`${API_BASE}/squint/growth/${issuer}`);
+      const data = await res.json();
+      if (!res.ok) return showError(id, data.error);
+      if (data.noActivity) return document.getElementById(id).innerHTML = 'no trustline activity found.';
+
+      const trendIcon = { accelerating: '📈', slowing: '📉', declining: '🚨', steady: '➡️' }[data.trend];
+      let html = `${trendIcon} holder growth is <b>${data.trend}</b>. `;
+      if (data.highChurn) html += `<span class="flag-warn">high churn detected — likely bot cycling, not real holders leaving.</span>`;
+      document.getElementById(id).innerHTML = html;
+    } catch (e) { showError(id, 'backend unreachable'); }
+  }
+
+  async function runSquintPattern(issuer) {
+    const id = 'result-squint-pattern';
+    try {
+      const res = await fetch(`${API_BASE}/squint/pattern/${issuer}`);
+      const data = await res.json();
+      if (!res.ok) return showError(id, data.error);
+
+      const flagClass = data.pattern.risk === 'high' || data.pattern.risk === 'medium-high' ? 'flag-bad'
+        : data.pattern.risk === 'medium' ? 'flag-warn' : 'flag-ok';
+      document.getElementById(id).innerHTML =
+        `<span class="${flagClass}">${data.pattern.name}</span> (risk: ${data.pattern.risk}). ${data.pattern.note}`;
+    } catch (e) { showError(id, 'backend unreachable'); }
+  }
+</script>
 </body>
 </html>
