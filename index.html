@@ -53,6 +53,26 @@
   .hero-guide-buttons {
     display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;
   }
+  .typewriter-box { min-height: 140px; display: flex; flex-direction: column; justify-content: center; }
+  .typewriter-text {
+    font-size: 15px; line-height: 1.8; color: var(--text); min-height: 90px;
+  }
+  .typewriter-text .cursor {
+    display: inline-block; width: 2px; height: 18px; background: var(--green);
+    margin-left: 2px; vertical-align: middle; animation: blink 0.8s step-end infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+  .typewriter-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
+  .typewriter-next {
+    background: var(--green); color: #06180c; border: none; border-radius: 6px;
+    padding: 10px 22px; font-family: 'Special Elite', monospace; font-size: 13px;
+    letter-spacing: 1px; cursor: pointer; text-transform: uppercase;
+  }
+  .typewriter-dots { display: flex; gap: 6px; }
+  .typewriter-dots span {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--border);
+  }
+  .typewriter-dots span.active { background: var(--green); }
   @media (max-width: 820px) {
     .hero-split { flex-direction: column; }
     .hero-video-col { min-height: 55vh; }
@@ -180,10 +200,14 @@
     </div>
     <div class="hero-guide-col">
       <h2>what is this?</h2>
-      <p>a lab experiment escaped onto the XRP Ledger. now these rats run <span class="guide-highlight">7 free tools</span> that check any token or wallet for rugs, bots, and risk — no signing, no cost, ever.</p>
-      <p>paste a token's issuer address, run a check, get a straight answer.</p>
-      <p><span class="guide-highlight">have an idea for a new tool?</span> propose it on the board. if the community votes it up and it gets built, you earn <span class="guide-highlight">10 XRP</span> as the creator.</p>
-      <div class="hero-guide-buttons">
+      <div class="typewriter-box">
+        <div class="typewriter-text" id="typewriterText"></div>
+        <div class="typewriter-controls">
+          <div class="typewriter-dots" id="typewriterDots"></div>
+          <button class="typewriter-next" id="typewriterNext" onclick="advanceTypewriter()">next</button>
+        </div>
+      </div>
+      <div class="hero-guide-buttons" id="heroGuideButtons" style="display: none;">
         <a href="app.html" class="cta-button-secondary">run a diagnostic &rarr;</a>
         <a href="board.html" class="cta-button-secondary">propose an experiment &rarr;</a>
       </div>
@@ -293,6 +317,68 @@
     document.addEventListener('touchstart', tryPlay, { once: true });
     document.addEventListener('click', tryPlay, { once: true });
   }
+
+  // Typewriter guide sequence
+  const typewriterLines = [
+    "a lab experiment escaped onto the XRP Ledger.",
+    "now these rats run 7 free tools that check any token or wallet for rugs, bots, and risk — no signing, no cost, ever.",
+    "paste a token's issuer address, run a check, get a straight answer.",
+    "have an idea for a new tool? propose it on the board.",
+    "if the community votes it up and it gets built, you earn 10 XRP as the creator.",
+    "scroll down to read the full story — or jump straight in:",
+  ];
+
+  let twIndex = 0;
+  let twCharIndex = 0;
+  let twTyping = false;
+  let twInterval = null;
+
+  const twTextEl = document.getElementById('typewriterText');
+  const twNextBtn = document.getElementById('typewriterNext');
+  const twDotsEl = document.getElementById('typewriterDots');
+  const heroGuideButtons = document.getElementById('heroGuideButtons');
+
+  function renderDots() {
+    twDotsEl.innerHTML = typewriterLines.map((_, i) =>
+      `<span class="${i === twIndex ? 'active' : ''}"></span>`
+    ).join('');
+  }
+
+  function typeLine(text) {
+    twTyping = true;
+    twCharIndex = 0;
+    twTextEl.innerHTML = '<span class="cursor"></span>';
+    clearInterval(twInterval);
+    twInterval = setInterval(() => {
+      twCharIndex++;
+      twTextEl.innerHTML = text.slice(0, twCharIndex) + '<span class="cursor"></span>';
+      if (twCharIndex >= text.length) {
+        clearInterval(twInterval);
+        twTyping = false;
+      }
+    }, 22);
+  }
+
+  function advanceTypewriter() {
+    if (twTyping) {
+      // Skip straight to the full line instead of advancing
+      clearInterval(twInterval);
+      twTextEl.innerHTML = typewriterLines[twIndex] + '<span class="cursor"></span>';
+      twTyping = false;
+      return;
+    }
+    twIndex++;
+    if (twIndex >= typewriterLines.length) {
+      twNextBtn.style.display = 'none';
+      heroGuideButtons.style.display = 'flex';
+      return;
+    }
+    renderDots();
+    typeLine(typewriterLines[twIndex]);
+  }
+
+  renderDots();
+  typeLine(typewriterLines[twIndex]);
 </script>
 </body>
 </html>
