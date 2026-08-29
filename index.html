@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>dredd doctors</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
@@ -155,7 +156,7 @@
 <body>
 
   <div class="hero">
-    <video autoplay loop muted playsinline>
+    <video autoplay loop muted playsinline webkit-playsinline preload="auto" id="heroVideo">
       <source src="assets/hero_loop.mp4" type="video/mp4">
     </video>
     <span class="scroll-hint">&#8595; scroll to read the file</span>
@@ -248,5 +249,18 @@
     </div>
 
   </div>
+<script>
+  // Some mobile browsers (especially with data-saver mode) silently
+  // block autoplay even on muted videos, which makes them fall back to
+  // showing a native play button. This forces playback via JS as a
+  // backup, and retries once if the browser initially blocks it.
+  const heroVideo = document.getElementById('heroVideo');
+  if (heroVideo) {
+    const tryPlay = () => heroVideo.play().catch(() => {});
+    tryPlay();
+    document.addEventListener('touchstart', tryPlay, { once: true });
+    document.addEventListener('click', tryPlay, { once: true });
+  }
+</script>
 </body>
 </html>
