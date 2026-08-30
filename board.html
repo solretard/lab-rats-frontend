@@ -131,9 +131,45 @@
     .experiment-card { padding: 12px 14px; gap: 10px; }
     .vote-btn { min-width: 46px; padding: 8px; font-size: 12px; }
   }
+  .topnav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 24px; background: var(--panel); border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .topnav .brand {
+    font-family: 'Special Elite', monospace; font-size: 15px; color: var(--green);
+    letter-spacing: 1px; text-decoration: none;
+  }
+  .topnav .nav-right { display: flex; align-items: center; gap: 10px; }
+  .nav-icon {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: #071009; border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--green); text-decoration: none; font-size: 14px;
+  }
+  .nav-icon:hover { border-color: var(--green); }
+  .nav-mint {
+    background: var(--green); color: #06180c; border: none; border-radius: 6px;
+    padding: 8px 16px; font-family: 'Special Elite', monospace; font-size: 11px;
+    letter-spacing: 1px; text-transform: uppercase; text-decoration: none;
+    box-shadow: 0 0 14px rgba(127,255,92,0.3); cursor: pointer;
+  }
+  @media (max-width: 480px) {
+    .topnav { padding: 10px 14px; }
+    .topnav .brand { font-size: 12px; }
+  }
 </style>
 </head>
 <body>
+
+  <div class="topnav">
+    <a href="index.html" class="brand">DREDD DOCTORS</a>
+    <div class="nav-right">
+      <a href="https://x.com/Dredd_Xrpl" target="_blank" rel="noopener" class="nav-icon" title="X / Twitter">𝕏</a>
+      <a href="https://t.me/dredd_docs" target="_blank" rel="noopener" class="nav-icon" title="Telegram">✈</a>
+      <a href="index.html#mint" class="nav-mint">mint now</a>
+    </div>
+  </div>
 
 <div class="wrap">
 
