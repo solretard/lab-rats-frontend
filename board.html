@@ -191,7 +191,7 @@
   </div>
 
   <div class="panel">
-    <label>your wallet — hold at least 1 lab rat to unlock submissions</label>
+    <label>your wallet — hold at least 1 Dredd Doctor to unlock submissions</label>
     <input type="text" id="checkWalletInput" placeholder="rYourWalletAddress">
     <button onclick="checkEligibility()">check eligibility</button>
     <div class="status-msg" id="eligibilityStatus"></div>
@@ -243,10 +243,10 @@
 
       if (data.eligible) {
         eligibleWallet = wallet;
-        statusEl.innerHTML = `<span class="flag-ok">verified — you hold a lab rat. submission form unlocked below.</span>`;
+        statusEl.innerHTML = `<span class="flag-ok">verified — you hold a Dredd Doctor. submission form unlocked below.</span>`;
         document.getElementById('submitPanel').style.display = 'block';
       } else {
-        statusEl.innerHTML = `<span class="flag-warn">${data.note || 'this wallet does not hold a lab rat yet.'}</span>`;
+        statusEl.innerHTML = `<span class="flag-warn">${data.note || 'this wallet does not hold a Dredd Doctor yet.'}</span>`;
         document.getElementById('submitPanel').style.display = 'none';
       }
     } catch (e) {
