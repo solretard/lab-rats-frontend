@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>dredd doctors — admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a1410; --panel: #0f1e17; --border: #2a4a3a;
+    --green: #7fff5c; --green-dim: #3d9e2f; --text: #d8f0d8; --text-dim: #7a9a85;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: radial-gradient(ellipse at top, #10241a 0%, #060d09 70%);
+    color: var(--text); font-family: 'Courier Prime', monospace; padding: 40px 20px 80px;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; }
+  h1 {
+    font-family: 'Special Elite', monospace; font-size: 24px; color: var(--green);
+    text-align: center; margin-bottom: 24px;
+  }
+  .key-panel {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 20px; max-width: 400px; margin: 0 auto 30px;
+  }
+  .key-panel input {
+    width: 100%; background: #071009; border: 1px solid var(--border); border-radius: 6px;
+    padding: 10px 12px; color: var(--text); font-family: 'Courier Prime', monospace; margin-bottom: 10px;
+  }
+  .key-panel button {
+    width: 100%; background: var(--green); color: #06180c; border: none; border-radius: 6px;
+    padding: 10px; font-family: 'Special Elite', monospace; cursor: pointer; text-transform: uppercase;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--green); font-family: 'Special Elite', monospace; font-size: 12px; text-transform: uppercase; }
+  .wallet-cell { font-size: 11px; color: var(--green-dim); word-break: break-all; }
+  .shipped-yes { color: var(--green); }
+  .shipped-no { color: var(--text-dim); }
+  .error-msg { color: #ff6b5c; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>DREDD DOCTORS — ADMIN</h1>
+
+  <div class="key-panel" id="keyPanel">
+    <input type="password" id="adminKey" placeholder="admin key">
+    <button onclick="loadExperiments()">unlock</button>
+  </div>
+
+  <div id="resultArea"></div>
+</div>
+
+<script>
+  const API_BASE = 'https://lab-rats-backend-production.up.railway.app/api';
+
+  // Remember the key for this browser session only — re-entering it every
+  // page load would get old fast, but it won't persist after closing the tab.
+  window.addEventListener('DOMContentLoaded', () => {
+    const saved = sessionStorage.getItem('dreddAdminKey');
+    if (saved) {
+      document.getElementById('adminKey').value = saved;
+      loadExperiments();
+    }
+  });
+
+  async function loadExperiments() {
+    const key = document.getElementById('adminKey').value.trim();
+    const resultArea = document.getElementById('resultArea');
+    if (!key) return;
+
+    resultArea.innerHTML = '<p style="text-align:center;">loading...</p>';
+
+    try {
+      const res = await fetch(`${API_BASE}/dredd/admin/experiments?key=${encodeURIComponent(key)}`);
+      const data = await res.json();
+
+      if (!res.ok) {
+        resultArea.innerHTML = `<p class="error-msg">${data.error}</p>`;
+        return;
+      }
+
+      sessionStorage.setItem('dreddAdminKey', key);
+      document.getElementById('keyPanel').style.display = 'none';
+
+      if (!data.experiments || data.experiments.length === 0) {
+        resultArea.innerHTML = '<p style="text-align:center;">no submissions yet.</p>';
+        return;
+      }
+
+      const rows = data.experiments.map(exp => `
+        <tr>
+          <td>${exp.id}</td>
+          <td>${exp.title}</td>
+          <td>${exp.description}</td>
+          <td class="wallet-cell">${exp.submitted_by}</td>
+          <td>${exp.upvotes}</td>
+          <td class="${exp.shipped ? 'shipped-yes' : 'shipped-no'}">${exp.shipped ? `✅ ${exp.reward_xrp || 10} XRP` : '—'}</td>
+          <td>${new Date(exp.created_at).toLocaleDateString()}</td>
+        </tr>
+      `).join('');
+
+      resultArea.innerHTML = `
+        <table>
+          <tr><th>ID</th><th>Title</th><th>Description</th><th>Wallet</th><th>Votes</th><th>Shipped</th><th>Date</th></tr>
+          ${rows}
+        </table>
+      `;
+    } catch (e) {
+      resultArea.innerHTML = '<p class="error-msg">backend unreachable.</p>';
+    }
+  }
+</script>
+</body>
+</html>
